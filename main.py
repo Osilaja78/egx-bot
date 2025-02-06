@@ -19,9 +19,9 @@ scheduler = BackgroundScheduler()
 load_dotenv()
 
 # Telegram Bot Credentials
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = "8128317803:AAFUKQid9GS95nGzHYYd0fPLB4y_sJm5GnQ"
 MY_CHANNEL_ID = "-1002395208097"  # Your personal channel
-CHANNEL_ID = os.getenv("CHANNEL_ID")  # The main betting channel
+CHANNEL_ID = "-1002392958037"  # The main betting channel
 
 # Blogabet Account Details
 BLOGABET_URL = "https://egxfutbol.blogabet.com/"
