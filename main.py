@@ -135,19 +135,13 @@ def check_and_post_bet():
         if os.path.exists(LOCK_FILE):
             os.remove(LOCK_FILE)
 
-# @app.on_event("startup")
-# def startup_event():
-#     """Start the scheduler when FastAPI starts."""
-#     if not scheduler.running:
-#         scheduler.add_job(check_and_post_bet, "interval", seconds=60, id="bet_checker", replace_existing=True)
-#         scheduler.start()
-if __name__ == "__main__":
+@app.on_event("startup")
+def startup_event():
+    """Start the scheduler when FastAPI starts."""
     if not scheduler.running:
+        scheduler.add_job(check_and_post_bet, "interval", seconds=60, id="bet_checker", replace_existing=True)
         scheduler.start()
-        scheduler.add_job(check_and_post_bet, "interval", seconds=60)
 
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 @app.on_event("shutdown")
 def shutdown_event():
