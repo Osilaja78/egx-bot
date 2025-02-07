@@ -1,6 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 import time
+from fastapi import FastAPI
+from apscheduler.schedulers.background import BackgroundScheduler
+
+app = FastAPI()
+scheduler = BackgroundScheduler()
 
 # Telegram Bot Credentials
 # BOT_TOKEN = "6820283861:AAFDzUcmgS55MMDK3qkMf95JY2DbsBy2e3E"
@@ -94,8 +99,9 @@ def send_telegram_message(message):
         print(f"Failed to send message: {str(e)}")
 
 
-while True:
+def check_and_post_bet():
     """Check for new bets and post to Telegram if new."""
+    global last_bet_time
 
     latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
 
@@ -115,3 +121,22 @@ while True:
     else:
         send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
     time.sleep(30)
+
+
+@app.on_event("startup")
+def startup_event():
+    """Start the scheduler when FastAPI starts."""
+    if not scheduler.running:
+        scheduler.start()
+        scheduler.add_job(check_and_post_bet, "interval", seconds=30)
+
+@app.on_event("shutdown")
+def shutdown_event():
+    """Shutdown the scheduler when FastAPI stops."""
+    scheduler.shutdown()
+    driver.quit()  # Close Selenium driver
+
+@app.get("/")
+def home():
+    return {"message": "FastAPI Bot Running with APScheduler"}
+
