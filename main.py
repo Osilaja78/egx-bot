@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import time
 from fastapi import FastAPI
 from apscheduler.schedulers.background import BackgroundScheduler
-from contextlib import asynccontextmanager
 
 app = FastAPI()
 scheduler = BackgroundScheduler()
@@ -124,15 +123,18 @@ def check_and_post_bet():
     time.sleep(30)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+@app.on_event("startup")
+def startup_event():
+    """Start the scheduler when FastAPI starts."""
     if not scheduler.running:
         scheduler.start()
         scheduler.add_job(check_and_post_bet, "interval", seconds=30)
-    yield
-    scheduler.shutdown()
 
-app = FastAPI(lifespan=lifespan)
+@app.on_event("shutdown")
+def shutdown_event():
+    """Shutdown the scheduler when FastAPI stops."""
+    scheduler.shutdown()
+    driver.quit()  # Close Selenium driver
 
 @app.get("/")
 def home():
