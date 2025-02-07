@@ -103,26 +103,37 @@ def check_and_post_bet():
     """Check for new bets and post to Telegram if new."""
     global last_bet_time
 
-    latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
+    # Check if another instance is already running
+    if os.path.exists(LOCK_FILE):
+        print("Another instance is already running. Skipping...")
+        return
 
-    if latest_time and latest_time != last_bet_time:
-        last_bet_time = latest_time  # Update last seen bet time
+    # Create the lock file
+    with open(LOCK_FILE, "w") as lock:
+        lock.write("running")
 
-        message = f"""⚠ LIVE BET ⚠ 
+    try:
+        latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
+
+        if latest_time and latest_time != last_bet_time:
+            last_bet_time = latest_time  # Update last seen bet time
+            message = f"""⚠ LIVE BET ⚠ 
 
 ⚽ Match: {match} 
 🎯 Pick: {pick} 
 ⏳ Minute: {minute} 
 💰 Odds: {odds} 
 🚥 Stake: {stake} 
-📊 Result: {result}
-"""
-        
-        send_telegram_message(message)
-    else:
-        send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
-    time.sleep(30)
-
+📊 Result: {result}"""
+            
+            send_telegram_message(message)
+        else:
+            send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
+    
+    finally:
+        # Remove the lock file after execution
+        if os.path.exists(LOCK_FILE):
+            os.remove(LOCK_FILE)
 
 @app.on_event("startup")
 def startup_event():
