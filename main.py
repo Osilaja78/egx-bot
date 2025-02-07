@@ -115,7 +115,8 @@ def check_and_post_bet():
 ⏳ Minute: {minute} 
 💰 Odds: {odds} 
 🚥 Stake: {stake} 
-📊 Result: {result}"""
+📊 Result: {result}
+"""
         
         send_telegram_message(message)
     else:
@@ -128,7 +129,7 @@ def startup_event():
     """Start the scheduler when FastAPI starts."""
     if not scheduler.running:
         scheduler.start()
-        scheduler.add_job(check_and_post_bet, "interval", seconds=60)
+        scheduler.add_job(check_and_post_bet, "interval", seconds=60, id="bet_checker", replace_existing=True)
 
 @app.on_event("shutdown")
 def shutdown_event():
