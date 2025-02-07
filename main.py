@@ -134,7 +134,6 @@ def startup_event():
 def shutdown_event():
     """Shutdown the scheduler when FastAPI stops."""
     scheduler.shutdown()
-    driver.quit()  # Close Selenium driver
 
 @app.get("/")
 def home():
