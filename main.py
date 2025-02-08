@@ -48,10 +48,6 @@ session.cookies.update(cookies)
 print("Before setting latest bet time...")
 last_bet_time = None
 
-# Print process info
-print(f"Process ID (PID): {os.getpid()}")
-print(f"Parent Process ID (PPID): {os.getppid()}")
-
 def get_latest_bet_time():
     # Visit Homepage to Establish Session
     homepage_url = "https://egxfutbol.blogabet.com/"
@@ -106,12 +102,6 @@ def send_telegram_message(message):
 
 def check_and_post_bet():
     """Check for new bets and post to Telegram if new."""
-    for job in scheduler.get_jobs():
-        print("===== Current Scheduled Jobs =====")
-        print(f"Job ID: {job.id}")
-        print(f"Trigger: {job.trigger}")
-        print(f"Next Run: {job.next_run_time}")
-        print("-----------------------")
     global last_bet_time
 
     latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
@@ -126,10 +116,11 @@ def check_and_post_bet():
 💰 Odds: {odds} 
 🚥 Stake: {stake} 
 📊 Result: {result}"""
-        
-        send_telegram_message(message)
+        if os.getpid() == 16:
+            send_telegram_message(message)
     else:
-        send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
+        if os.getpid() == 16:
+            send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
 
 @app.on_event("startup")
 def startup_event():
