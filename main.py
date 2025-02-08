@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import time
 from fastapi import FastAPI
 from apscheduler.schedulers.background import BackgroundScheduler
+import os
 
 app = FastAPI()
 scheduler = BackgroundScheduler()
@@ -46,6 +47,10 @@ session.cookies.update(cookies)
 # Store last posted bet time
 print("Before setting latest bet time...")
 last_bet_time = None
+
+# Print process info
+print(f"Process ID (PID): {os.getpid()}")
+print(f"Parent Process ID (PPID): {os.getppid()}")
 
 def get_latest_bet_time():
     # Visit Homepage to Establish Session
@@ -101,23 +106,19 @@ def send_telegram_message(message):
 
 def check_and_post_bet():
     """Check for new bets and post to Telegram if new."""
+    for job in scheduler.get_jobs():
+        print("===== Current Scheduled Jobs =====")
+        print(f"Job ID: {job.id}")
+        print(f"Trigger: {job.trigger}")
+        print(f"Next Run: {job.next_run_time}")
+        print("-----------------------")
     global last_bet_time
 
-    # Check if another instance is already running
-    if os.path.exists(LOCK_FILE):
-        print("Another instance is already running. Skipping...")
-        return
+    latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
 
-    # Create the lock file
-    with open(LOCK_FILE, "w") as lock:
-        lock.write("running")
-
-    try:
-        latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
-
-        if latest_time and latest_time != last_bet_time:
-            last_bet_time = latest_time  # Update last seen bet time
-            message = f"""⚠ LIVE BET ⚠ 
+    if latest_time and latest_time != last_bet_time:
+        last_bet_time = latest_time  # Update last seen bet time
+        message = f"""⚠ LIVE BET ⚠ 
 
 ⚽ Match: {match} 
 🎯 Pick: {pick} 
@@ -125,15 +126,10 @@ def check_and_post_bet():
 💰 Odds: {odds} 
 🚥 Stake: {stake} 
 📊 Result: {result}"""
-            
-            send_telegram_message(message)
-        else:
-            send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
-    
-    finally:
-        # Remove the lock file after execution
-        if os.path.exists(LOCK_FILE):
-            os.remove(LOCK_FILE)
+        
+        send_telegram_message(message)
+    else:
+        send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
 
 @app.on_event("startup")
 def startup_event():
