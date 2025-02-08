@@ -11,8 +11,8 @@ scheduler = BackgroundScheduler()
 # Telegram Bot Credentials
 # BOT_TOKEN = "6820283861:AAFDzUcmgS55MMDK3qkMf95JY2DbsBy2e3E"
 BOT_TOKEN = "8128317803:AAFUKQid9GS95nGzHYYd0fPLB4y_sJm5GnQ"
-CHANNEL_ID = "-1002395208097"  # Use @username if public
-# CHANNEL_ID = "1002392958037"  # Use @username if public
+# CHANNEL_ID = "-1002395208097"  # Use @username if public
+CHANNEL_ID = "-1002392958037"  # Use @username if public
 
 # Step 1: Define Headers
 headers = {
@@ -118,9 +118,9 @@ def check_and_post_bet():
 📊 Result: {result}"""
         if os.getpid() == 16:
             send_telegram_message(message)
-    else:
-        if os.getpid() == 16:
-            send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
+    # else:
+    #     if os.getpid() == 16:
+    #         send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
 
 @app.on_event("startup")
 def startup_event():
