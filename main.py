@@ -3,16 +3,18 @@ from bs4 import BeautifulSoup
 import time
 from fastapi import FastAPI
 from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 import os
 
 app = FastAPI()
 scheduler = BackgroundScheduler()
 
+load_dotenv()
 # Telegram Bot Credentials
-# BOT_TOKEN = "6820283861:AAFDzUcmgS55MMDK3qkMf95JY2DbsBy2e3E"
-BOT_TOKEN = "8128317803:AAFUKQid9GS95nGzHYYd0fPLB4y_sJm5GnQ"
-# CHANNEL_ID = "-1002395208097"  # Use @username if public
-CHANNEL_ID = "-1002392958037"  # Use @username if public
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_ID = os.getenv("CHANNEL_ID")  # Use @username if public
+EMAIL = os.getenv("EMAIL")
+PASSWORD = os.getenv("PASSWORD")
 
 # Step 1: Define Headers
 headers = {
@@ -48,8 +50,39 @@ session.cookies.update(cookies)
 print("Before setting latest bet time...")
 last_bet_time = None
 
+def login():
+    """Logs into the website and maintains a session"""
+    loginurl = "https://egxfutbol.blogabet.com/cp/processLogin"
+
+    payload = {
+        "email": EMAIL,
+        "password": PASSWORD,
+        "remember-me": 1
+    }
+
+    print("🔑 Logging in to Blogabet...")
+
+    # Perform login
+    login_response = session.post(loginurl, data=payload)
+
+    if login_response.status_code == 200 and "errorMessages" not in login_response.json():
+        print("✅ Login successful!")
+        return True
+    else:
+        print("❌ Login failed. Check credentials or website structure.")
+        time.sleep(20)
+        login()
+        return False
+
 def get_latest_bet_time():
     # Visit Homepage to Establish Session
+
+    # Ensure we're logged in
+    session_cookie = session.cookies.get("login_string")
+    if not session_cookie:
+        login()
+        return None, None, None, None, None, None, None
+
     homepage_url = "https://egxfutbol.blogabet.com/"
     session.get(homepage_url)
 
@@ -61,7 +94,9 @@ def get_latest_bet_time():
         soup = BeautifulSoup(response.text, features="html.parser")
 
         try:
-            feed_pick_title = soup.find("div", class_="feed-pick-title")
+            feed_pick = soup.find("ul", class_="pick-list")
+
+            feed_pick_title = feed_pick.find("div", class_="feed-pick-title")
 
             date_element = soup.find("small", class_="bet-age").text
             match = feed_pick_title.find("a").text
@@ -78,9 +113,16 @@ def get_latest_bet_time():
                     score = result.text.strip()
                 except:
                     continue
-            return date_element, match, pick, odd, minute, stake, score
+            return date_element, match, pick, odd, minute, stake, ""
         except Exception as e:
             print(e)
+            login()
+            return None, None, None, None, None, None, None
+
+    else:
+        print(f"❌ Failed to fetch bets. Status code: {response.status_code}")
+        login()
+        return None, None, None, None, None, None, None
 
 
 def send_telegram_message(message):
@@ -118,15 +160,15 @@ def check_and_post_bet():
 📊 Result: {result}"""
         if os.getpid() == 16:
             send_telegram_message(message)
-    # else:
-    #     if os.getpid() == 16:
-    #         send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
+    else:
+        if os.getpid() == 16:
+            send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
 
 @app.on_event("startup")
 def startup_event():
     """Start the scheduler when FastAPI starts."""
     if not scheduler.running:
-        scheduler.add_job(check_and_post_bet, "interval", seconds=60, id="bet_checker", replace_existing=True)
+        scheduler.add_job(check_and_post_bet, "interval", seconds=30, id="bet_checker", replace_existing=True)
         scheduler.start()
 
 
