@@ -160,9 +160,9 @@ def check_and_post_bet():
 📊 Result: {result}"""
         if os.getpid() == 16:
             send_telegram_message(message)
-    else:
-        if os.getpid() == 16:
-            send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
+    # else:
+        # if os.getpid() == 16:
+            # send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
 
 @app.on_event("startup")
 def startup_event():
