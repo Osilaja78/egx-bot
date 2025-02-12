@@ -12,7 +12,7 @@ scheduler = BackgroundScheduler()
 load_dotenv()
 # Telegram Bot Credentials
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")  # Use @username if public
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 EMAIL = os.getenv("EMAIL")
 PASSWORD = os.getenv("PASSWORD")
 
@@ -48,7 +48,7 @@ session.cookies.update(cookies)
 
 # Store last posted bet time
 print("Before setting latest bet time...")
-last_bet_time = None
+last_bet_time = "Wed, Feb 12th, 2025, 16:34"
 
 def login():
     """Logs into the website and maintains a session"""
@@ -75,6 +75,7 @@ def login():
         return False
 
 def get_latest_bet_time():
+    # print("Getting latest bet time...")
     # Visit Homepage to Establish Session
 
     # Ensure we're logged in
@@ -92,33 +93,36 @@ def get_latest_bet_time():
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, features="html.parser")
+        feed_title = soup.find("h2", class_="pick-feed-title").text
 
-        try:
-            feed_pick = soup.find("ul", class_="pick-list")
+        if "Pending Picks" in feed_title:
+            try:
+                feed_pick = soup.find("ul", class_="pick-list")
 
-            feed_pick_title = feed_pick.find("div", class_="feed-pick-title")
+                feed_pick_title = feed_pick.find("div", class_="feed-pick-title")
 
-            date_element = soup.find("small", class_="bet-age").text
-            match = feed_pick_title.find("a").text
-            pick = feed_pick_title.find("div", class_="pick-line").text.split('@')[0].strip()
-            odd = feed_pick_title.find("div", class_="pick-line").text.split('@')[1].strip()
-            minute_stake = feed_pick_title.find_all("span", class_="label")
-            minute = minute_stake[2].text
-            stake = minute_stake[1].text
-            results = feed_pick_title.find("div", class_="labels")
+                date_element = soup.find("small", class_="bet-age").text
+                match = feed_pick_title.find("a").text
+                pick = feed_pick_title.find("div", class_="pick-line").text.split('@')[0].strip()
+                odd = feed_pick_title.find("div", class_="pick-line").text.split('@')[1].strip()
+                minute_stake = feed_pick_title.find_all("span", class_="label")
+                minute = minute_stake[2].text
+                stake = minute_stake[1].text
+                results = feed_pick_title.find("div", class_="labels")
 
-            for result in results:
-                try:
-                    neww = result.find('i', class_='enable-tooltip')
-                    score = result.text.strip()
-                except:
-                    continue
-            return date_element, match, pick, odd, minute, stake, ""
-        except Exception as e:
-            print(e)
-            login()
+                for result in results:
+                    try:
+                        neww = result.find('i', class_='enable-tooltip')
+                        score = result.text.strip()
+                    except:
+                        continue
+                return date_element, match, pick, odd, minute, stake, ""
+            except Exception as e:
+                print(e)
+                login()
+                return None, None, None, None, None, None, None
+        else:
             return None, None, None, None, None, None, None
-
     else:
         print(f"❌ Failed to fetch bets. Status code: {response.status_code}")
         login()
@@ -127,9 +131,9 @@ def get_latest_bet_time():
 
 def send_telegram_message(message):
     """Send the extracted bet details to the Telegram channel."""
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{MY_BOT_TOKEN}/sendMessage"
     payload = {
-        'chat_id': CHANNEL_ID,
+        'chat_id': MY_CHANNEL_ID,
         'text': message,
         'parse_mode': 'HTML'
     }
@@ -147,6 +151,7 @@ def check_and_post_bet():
     global last_bet_time
 
     latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
+    print(f"Last time ==> {last_bet_time}, Latest time: {latest_time}")
 
     if latest_time and latest_time != last_bet_time:
         last_bet_time = latest_time  # Update last seen bet time
@@ -158,8 +163,9 @@ def check_and_post_bet():
 💰 Odds: {odds} 
 🚥 Stake: {stake} 
 📊 Result: {result}"""
-        if os.getpid() == 16:
-            send_telegram_message(message)
+        # if os.getpid() == 16:
+        print(os.getpid())
+        send_telegram_message(message)
     # else:
         # if os.getpid() == 16:
             # send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
