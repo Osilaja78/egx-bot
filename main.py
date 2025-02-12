@@ -75,7 +75,7 @@ def login():
         return False
 
 def get_latest_bet_time():
-    # print("Getting latest bet time...")
+    print("Getting latest bet time...")
     # Visit Homepage to Establish Session
 
     # Ensure we're logged in
