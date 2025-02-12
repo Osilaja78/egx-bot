@@ -131,9 +131,9 @@ def get_latest_bet_time():
 
 def send_telegram_message(message):
     """Send the extracted bet details to the Telegram channel."""
-    url = f"https://api.telegram.org/bot{MY_BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
-        'chat_id': MY_CHANNEL_ID,
+        'chat_id': CHANNEL_ID,
         'text': message,
         'parse_mode': 'HTML'
     }
@@ -163,9 +163,8 @@ def check_and_post_bet():
 💰 Odds: {odds} 
 🚥 Stake: {stake} 
 📊 Result: {result}"""
-        # if os.getpid() == 16:
-        print(os.getpid())
-        send_telegram_message(message)
+        if os.getpid() == 16:
+            send_telegram_message(message)
     # else:
         # if os.getpid() == 16:
             # send_telegram_message(f"No new post, checking,\nLatest time: {latest_time},\nLast time: {last_bet_time}")
