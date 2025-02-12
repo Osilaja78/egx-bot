@@ -151,7 +151,6 @@ def check_and_post_bet():
     global last_bet_time
 
     latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
-    print(f"Last time ==> {last_bet_time}, Latest time: {latest_time}")
 
     if latest_time and latest_time != last_bet_time:
         last_bet_time = latest_time  # Update last seen bet time
