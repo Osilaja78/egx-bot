@@ -75,7 +75,6 @@ def login():
         return False
 
 def get_latest_bet_time():
-    print("Getting latest bet time...")
     # Visit Homepage to Establish Session
 
     # Ensure we're logged in
@@ -149,6 +148,7 @@ def send_telegram_message(message):
 def check_and_post_bet():
     """Check for new bets and post to Telegram if new."""
     global last_bet_time
+    send_telegram_message("Still checking...")
 
     latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
 
@@ -172,7 +172,7 @@ def check_and_post_bet():
 def startup_event():
     """Start the scheduler when FastAPI starts."""
     if not scheduler.running:
-        scheduler.add_job(check_and_post_bet, "interval", seconds=30, id="bet_checker", replace_existing=True)
+        scheduler.add_job(check_and_post_bet, "interval", minutes=1, id="bet_checker", replace_existing=True)
         scheduler.start()
 
 
