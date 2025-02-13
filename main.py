@@ -148,7 +148,6 @@ def send_telegram_message(message):
 def check_and_post_bet():
     """Check for new bets and post to Telegram if new."""
     global last_bet_time
-    send_telegram_message("Still checking...")
 
     latest_time, match, pick, odds, minute, stake, result = get_latest_bet_time()
 
